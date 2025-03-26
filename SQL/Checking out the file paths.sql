@@ -1,6 +1,6 @@
 
 create view view_WaterResourcesFilepaths as
-
+use SCPN_ThumbsPlus_Photos
 SELECT Thumbnail.idThumb, Path.idPath, Path.name as filePath, Thumbnail.name as fileName
 FROM Path INNER JOIN Thumbnail ON Path.idPath = Thumbnail.idPath
 where Path.name like 'Active_Projects\IM\Monitoring\Water_Resources\field_resources\images\%'  AND Thumbnail.name NOT LIKE 'Thumbs.db'

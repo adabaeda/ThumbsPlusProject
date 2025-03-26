@@ -9,7 +9,7 @@ select CHARINDEX('\images\', @pathString) as Position
 
 
 													--10,594 photos
-create view view_WaterResources_FilePathInfo as 
+create view view_WR_Extracted_FilePathInfo as 
 with replaceChars 
 as
 (
@@ -20,7 +20,7 @@ as
 		len(filePath)-CHARINDEX('\images\', filePath)
 
 			),'\', '.') as pathInfo
-	from view_WaterResourcesNumberedPhotos
+	from view_WRNumberedPhotos
 )
 select distinct * 
 from 
@@ -36,7 +36,7 @@ from
 ) column_info;
 
 use SCPN_ThumbsPlus_Photos
-select * from view_WaterResources_FilePathInfo
+select * from view_WR_Extracted_FilePathInfo
 --where name like'Active_Projects\IM\Monitoring\Water_Resources\field_resources\images\BAND\Capulin\20081007'
   
 --select value from string_split()
