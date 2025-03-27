@@ -8,7 +8,7 @@ set @pathString = (select filePath from view_WaterResourcesNumberedPhotos wr whe
 select CHARINDEX('\images\', @pathString) as Position
 
 
-													--10,594 photos
+drop view if exists view_WR_Extracted_FilePathInfo 													--10,594 photos
 create view view_WR_Extracted_FilePathInfo as 
 with replaceChars 
 as
@@ -30,7 +30,8 @@ from
 		PARSENAME(pathInfo, 2) as siteName,
 		PARSENAME(pathInfo, 1) as Date,
 		photoNumber,
-		filePath
+		filePath,
+		fileName
 
 	from replaceChars
 ) column_info;
