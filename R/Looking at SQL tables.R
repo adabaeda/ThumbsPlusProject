@@ -68,14 +68,30 @@ noNACols %>%
 ###==============================================================================
 
 
+noNACols %>%
+  select(idThumbUDF, uf_Copyright_Notice) %>%
+  filter(!is.na(uf_Copyright_Notice)) %>% distinct() %>% view()
 
 
 
+noNACols %>%
+  select(uf_PhotoNotes) %>%
+  filter(!is.na(uf_PhotoNotes)) %>% distinct() %>% view()
 
+
+duplicateFileNames <- WR_PathandUDF %>% 
+  select(fileName) %>% 
+  group_by(fileName) %>% tally() %>% 
+  filter(!n == '1') 
 
 ###
 
 
+EXDupeFileName <- WR_PathandUDF %>% 
+  select(idThumb,
+         filePath,
+         fileName) %>% 
+  filter(fileName == 'DSC_0020.JPG') 
 
 
 
