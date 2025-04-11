@@ -64,6 +64,30 @@ filterThese10 <- WR_PathandUDF %>%
 filterThese11 <- WR_PathandUDF %>% 
   filter(str_detect(pathInfo, "MEVE.Mancos.20180329.20180328"))
 
+filterThese12  <- WR_PathandUDF %>% 
+  filter(str_detect(pathInfo, "20191103_survey"))
+
+filterThese13  <- WR_PathandUDF %>% 
+  filter(str_detect(pathInfo, "Canyon del Muerto$"))
+
+filterThese14  <- WR_PathandUDF %>% 
+  filter(str_detect(Date, "random"))
+
+filterThese15  <- WR_PathandUDF %>% 
+  filter(str_detect(Date, "Many Cherry Spring"))
+
+filterThese16  <- WR_PathandUDF %>% 
+  filter(str_detect(Date, "Twin Trail Spring$"))
+
+filterThese17  <- WR_PathandUDF %>% 
+  filter(str_detect(Date, "Wild Cherry Spring$"))
+
+filterThese18  <- WR_PathandUDF %>% 
+  filter(str_detect(Date, "GRCA$"))
+
+filterThese19  <- WR_PathandUDF %>% 
+  filter(str_detect(Date, "GCT Unknown Camera"))
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 filterList <- ls(pattern = "^filterThese\\d")
@@ -73,7 +97,7 @@ for (d in 1:length(filterList)) {
   filterThese <- bind_rows(filterThese, get(filterList[[d]])) %>% distinct() }
 rm(list = ls(pattern = "^filterThese\\d")) 
 
-filterThese <- filterThese %>% arrange(filePath)
+filterThese <- filterThese %>% arrange(Date)
 write_tsv(filterThese, "filteredFiles.txt")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -85,9 +109,9 @@ notNorm %>%
 
 ###==============================================================
 
-# filteredData <- WR_PathandUDF %>% 
-#   filter(!idThumb %in% filterThese$idThumb) 
-# save(filteredData, file=here("filteredPathandUDF")) #s
+filteredData <- WR_PathandUDF %>%
+  filter(!idThumb %in% filterThese$idThumb)
+save(filteredData, file=here("filteredPathandUDF")) #s
 
 ###==============================================================
 
@@ -106,36 +130,82 @@ notNorm %>%
 
 load(here("filteredPathandUDF"))
 
-colnames <- c("FileName",
-              "filePath",
-              "idThumb",
-              "photoNumber",
-              "Title",
-              "Date_Created",
-              "Access_Status",
-              "Rights/Access_Restrictions",
-              "Contact",
-              "NPS_Unit",
-              "Contributor",
-              "Location",
-              "Keywords/Tags",
-              "Description",
-              "Publisher",
-              "Note/Comment",
-              "Details/Contents")
-
-SCPNtemplate <- data.frame(matrix(ncol = 17, nrow = 0))
-colnames(SCPNtemplate) <- colnames
-
-
-SCPNtemplate %>% 
-  mutate(FileName = filteredData$fileName,
-         filePath = filteredData$filePath,
-         idThumb = filteredData$idThumb,
-         photoNumber = filteredData$photoNumber,
-         Title = paste0(filteredData$parkCode, filteredData$Date))
-
-
-
+filteredPathandUDF <- filteredData
 #----------------------------------------------------------------------
+##Coalescing uf_PhotoYear and Date(Extracted from filepath info)------------------------
+
+filteredPathandUDF %>% 
+  select(uf_PhotoYear, uf_PhotoDate, Date) %>% 
+  filter(is.na(uf_PhotoDate)) %>% 
+  arrange(Date) %>% distinct() %>% view()
+
+filteredPathandUDF %>% 
+  filter(is.na(idThumbUDF)) %>% 
+  select(Date) %>% distinct() %>% view()
+
+## Looking at Duf_PhotoDate## Looking at Dates
+filteredPathandUDF %>% 
+  select(uf_PhotoYear, Date) %>% 
+  arrange(uf_PhotoYear) %>% 
+  distinct() %>% view()
+
+
+WR_Dates <- filteredPathandUDF %>% 
+  select(idThumb, pathInfo, Date, uf_PhotoYear, uf_PhotoDate) %>% distinct()
+
+
+### Fixing blank uf_photoyear and uf_photdate from filepath CHCU_Photos_20151109
+
+
+DateFixes <- filteredData %>% 
+mutate(DateFix = ifelse(Date == "20100525_Labeled", "20100525",
+                  ifelse(Date == "meveman01_20180328", "20180328",
+                      ifelse(Date == "PETR_2014Dec10_PhotoPoints", "20141210", 
+                             ifelse(Date == "CHCU_Photos_20151109", "20151109", 
+                                    ifelse(Date == "20080915Petroglyph", "20080915",
+                                           ifelse(Date == "Scanned Photos_1998-2003", "1998-2003",
+                                                  ifelse(Date == "Hades Lake 07-28-10", "20100728",
+                                                         ifelse(Date == "Final", "20110611",
+                                                                ifelse(Date == "Wellhouse_20140722", "20170722",
+                                                                       ifelse(Date == "PETR_2014Jan15_PhotoPoints", "20140115",
+                                                                              ifelse(Date == "20080815Petr_geomorph", "20080815",
+                                                                                     ifelse(Date == "07-28-10", "20100728",
+                                                                                            ifelse(Date == "08-01", "20100801",
+                                                                                                   ifelse(Date == "2010Jul14", "20100714",
+                                                                    Date)))))))))))))))
+
+DateFixes %>% 
+  select(uf_PhotoYear, DateFix) %>% 
+  arrange(uf_PhotoYear) %>% 
+  distinct() %>% view()
+
+WRDatesFixed <- filteredData %>% 
+  left_join(DateFixes) %>% 
+  select(-Date) %>% 
+  rename(Date = "DateFix") 
+
+WRWorking_Clean <- WRDatesFixed %>% 
+  select(idThumb,
+         idThumbUDF, 
+         idPath,
+         pathInfo,
+         parkCode,
+         siteName,
+         Date,
+         uf_ParkCode,
+         uf_Ecosite,
+         uf_TripDescription,
+         uf_Caption,
+         uf_PhotoNotes,
+         uf_PhotoYear,
+         uf_PhotoDate,
+         filePath,
+         fileName,
+         photoNumber)
+
+save(WRWorking_Clean, file=here("WRWorking_Clean")) #s
+
+
+
+
 
